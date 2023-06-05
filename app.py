@@ -14,7 +14,6 @@ from PyQt6.QtWidgets import *
 # Datetime handling
 import calendar
 from datetime import datetime
-from itertools import cycle
 
 class MainWindow(QMainWindow):
     def __init__(self, view):
@@ -49,7 +48,7 @@ class CalendarView(QWidget): # Generates a calendar view containing 35 days
 
         for week in range(5): # Iterates through five rows (representing a week)
             for day in range(7): # Iterates through each day in the week, filling out columns
-                day_box = QMessageBox()
+                day_box = QLabel()
                 
                 try:
                     date = str(dates.pop())
