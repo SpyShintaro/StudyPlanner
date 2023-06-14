@@ -25,8 +25,13 @@ class MainWindow(QMainWindow):
         widget = QWidget()
         main_layout = QGridLayout()
 
+        tab = QTabWidget()
+        tab.addTab(view, "Calendar")
+
         main_layout.addWidget(QGroupBox("Item Information"), 1, 1, 4, 2)
-        main_layout.addWidget(view, 1, 3, 4, 7)
+        main_layout.addWidget(tab, 1, 2, 4, 7)
+
+        main_layout.setHorizontalSpacing(25)
 
         widget.setLayout(main_layout)
 
@@ -42,7 +47,6 @@ class CalendarView(QWidget): # Generates a calendar view containing 35 days
     def initUI(self):
         calendar_layout = QGridLayout()
 
-        calendar_group = QGroupBox(f"{datetime.today().month}")
         dates = self.map_dates()[::-1] # A list of dates in the month, spaced with zeroes to start at the correct weekday
         print(dates)
 
@@ -59,8 +63,9 @@ class CalendarView(QWidget): # Generates a calendar view containing 35 days
                     pass
 
                 calendar_layout.addWidget(day_box, week, day)
-
+        
         self.setLayout(calendar_layout)
+        self.updateGeometry()
 
     def map_dates(self):
         """
@@ -71,9 +76,19 @@ class CalendarView(QWidget): # Generates a calendar view containing 35 days
         starting_weekday, month_range = calendar.monthrange(today.year, today.month)
 
         
-        dates = [0 for day in range(starting_weekday - 1)] + [date for date in range(month_range + 1)] # Adds 0 for each day until the starting weekday of the month, after which it appends the date to each element of the list
+        dates = [0] * (starting_weekday - 1) + [date for date in range(month_range + 1)] # Adds 0 for each day until the starting weekday of the month, after which it appends the date to each element of the list
 
         return dates
+
+class DateBox(QTextEdit):
+    """
+    A widget template for all dates in the calendar
+    """
+    def __init__(self, date: datetime):
+        super().__init__()
+
+    def initUI(self):
+        pass
 
 def main():
     app = QApplication(sys.argv)
