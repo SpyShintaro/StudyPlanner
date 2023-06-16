@@ -15,6 +15,8 @@ from PyQt6.QtWidgets import *
 import calendar
 from datetime import datetime
 
+from studytime import core
+
 class MainWindow(QMainWindow):
     def __init__(self, view):
         super().__init__()
@@ -47,8 +49,7 @@ class CalendarView(QWidget): # Generates a calendar view containing 35 days
     def initUI(self):
         calendar_layout = QGridLayout()
 
-        dates = self.map_dates()[::-1] # A list of dates in the month, spaced with zeroes to start at the correct weekday
-        print(dates)
+        dates = self.map_dates() # A list of dates in the month, spaced with zeroes to start at the correct weekday
 
         for week in range(5): # Iterates through five rows (representing a week)
             for day in range(7): # Iterates through each day in the week, filling out columns
@@ -67,25 +68,14 @@ class CalendarView(QWidget): # Generates a calendar view containing 35 days
         self.setLayout(calendar_layout)
         self.updateGeometry()
 
-    def map_dates(self):
-        """
-        Maps all dates in the month to weekdays for use in calendar, and returns a tuple containg the first weekday of the month, and the final day
-        """
-        today = datetime.today()
-
-        starting_weekday, month_range = calendar.monthrange(today.year, today.month)
-
-        
-        dates = [0] * (starting_weekday - 1) + [date for date in range(month_range + 1)] # Adds 0 for each day until the starting weekday of the month, after which it appends the date to each element of the list
-
-        return dates
-
-class DateBox(QTextEdit):
+class DateObject(QListWidget):
     """
     A widget template for all dates in the calendar
     """
-    def __init__(self, date: datetime):
+    def __init__(self, date):
         super().__init__()
+
+        self.header = QTextEdit(f"{date}")
 
     def initUI(self):
         pass
