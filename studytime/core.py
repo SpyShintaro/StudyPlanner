@@ -1,8 +1,8 @@
 # Imports
 if __name__ == "__main__": # Band-Aid fix for if I want to directly test this module in particular (deleting later)
-    from time import *
+    from time_class import *
 else:
-    from studytime.time import *
+    from studytime.time_class import *
 
 from datetime import datetime
 import calendar
@@ -17,13 +17,17 @@ class SaveInstance:
         Caches relevant data from json file
         """
         self.file_name = file_name
-        data = self.load_file()
+        self.data = self.load_file()
     
     def generate_new_year(self, year) -> list:
+        """
+        Generates a new year instance 
+        """
         new_year = []
 
         for month in range(1, 13):
-            new_year.append([dates for dates in map_dates(year, month) if dates != 0])
+            current_month = Month(month, year, [Date(date) for date in map_dates(year, month) if date != 0]).prepare_dict()
+            new_year.append({f"{current_month['name']}": current_month['data']}) # Generates a dictionary item for each month, involving the dates
         
         return new_year
     
@@ -36,8 +40,25 @@ class SaveInstance:
 
         template = {f"{now.year}": self.generate_new_year(now.year)}
         
-        with open(file_path, "a") as f:
+        with open(file_path, "w") as f:
             json.dump(template, f, indent = 4)
+        
+        return template
+
+    def update_file(self, year):
+        """
+        Gets new year data, and updates the JSON file accordingly
+        """
+        file_path = f"studytime/app_data/{self.file_name}.json"
+        template = {f"{year}": self.generate_new_year(year)}
+
+        with open(file_path, "r") as f: # Loading JSON file into Python Object
+            data = json.load(f)
+        
+        data.update(template) # Adding template to the JSON/Python object
+
+        with open(file_path, "w") as f: # Rewrites JSON file using updated data
+            json.dump(data, f, indent=4)
         
         return template
     
@@ -48,7 +69,7 @@ class SaveInstance:
         file_path = f"studytime/app_data/{self.file_name}.json"
 
         try:
-            with open(file_path) as f:
+            with open(file_path, "r") as f:
                 data = json.load(f)
                 print(data["2023"])
         except FileNotFoundError:
@@ -67,17 +88,26 @@ class Task:
     """
     The standard type of StudyTime object, this indicates any one-time activity that is set for the user to complete by a certain time
     """
-    def __init__(self, name, date_set: datetime, deadline: datetime):
-        self.name = f"{deadline} {name}"
+    def __init__(self, name: str, date_set: datetime.date, deadline: datetime, subject):
+        """
+        Creates a dictionary object
+        """
+        self.name = name
         self.date_set = date_set
         self.deadline = deadline
+        self.subject = subject
     
     def generate_task(self):
         """
         Saves the task into various other objects
         """
+        item_data = {
+            "name": f"{self.name}",
+            "subject": f"{self.subject}",
+            "date set": f"{self.date_set}",
+        }
 
-def map_dates(year, month) -> list[int]:
+def map_dates(year: int, month: int) -> list[int]:
     """
     Maps all dates in the month to weekdays for use in calendar, and returns a tuple containg the first weekday of the month, and the final day
     """
