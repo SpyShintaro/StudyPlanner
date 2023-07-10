@@ -26,6 +26,9 @@ class SaveInstance:
         self.file_name = file_name
         self.data = self.load_file()
 
+        self.items = self.scan_items()
+        print(self.items)
+
     def add_item(self, item_time: datetime, item: object):
         """
         A generic method for adding organizational items to the relevant date
@@ -175,7 +178,23 @@ class SaveInstance:
 
         return data
 
+    def scan_items(self):
+        """
+        Scans through the save data for any organizational items
+        """
+        items = []
+        for year in self.data:
+            for idx, month in enumerate(year["months"]):
+                for date in month:
+                    if date["data"] != []:
+                        items.append({datetime(int(year["year"]), idx + 1, int(date["date"])).strftime("%m/%d/%Y"): date["data"]}) # Pretty sure this shouldn't work, but I suppose God is smiling down on me today
+        
+        return items
+
     def save_changes(self):
+        """
+        Writes the contents of this save instance's data attribute over the save file
+        """
         file_path = f"studytime/app_data/{self.file_name}.json"
 
         with open(file_path, "w") as f:
@@ -272,3 +291,6 @@ def map_dates(year: int, month: int) -> list[int]:
     dates = [0] * (starting_weekday - 1) + [date for date in range(month_range + 1)] # Adds 0 for each day until the starting weekday of the month, after which it appends the date to each element of the list
 
     return dates
+
+if __name__ == "__main__":
+    save = SaveInstance("dates")
