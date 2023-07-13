@@ -196,14 +196,14 @@ class SaveInstance:
         """
         Searches through items for results with specified name
         """
-        query = re.compile(fr"{name}")
+        query = re.compile(fr"{name.lower()}+")
         results = []
 
         for date in self.items:
             print(date)
             items = date["data"]
             for item in items:
-                if query.match(item["name"]):
+                if query.findall(item["name"].lower()):
                     results.append(item)
         
         return results
