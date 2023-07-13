@@ -14,6 +14,7 @@ else:
 from datetime import datetime
 import calendar
 import json
+import re
 
 class SaveInstance:
     """
@@ -191,6 +192,18 @@ class SaveInstance:
         
         return items
 
+    def search_name(self, name: str) -> list:
+        """
+        Searches through items for results with specified name
+        """
+        query = re.compile(fr"{name}")
+
+        print(query)
+
+        for date in self.items:
+            print(date)
+
+
     def save_changes(self):
         """
         Writes the contents of this save instance's data attribute over the save file
@@ -208,7 +221,6 @@ class SaveInstance:
         for year in data: # Accessing year array
             self.years.append(Year(year))
 
-
 class Task:
     """
     The standard type of StudyTime object, this indicates any one-time activity that is set for the user to complete by a certain time
@@ -219,7 +231,7 @@ class Task:
         """
         self.name = name
         self.date = date
-        self.time = date.time()
+        self.time = date.time().strftime("%H:%M:%S")
         self.subject = subject
         self.completed = False
     
@@ -247,7 +259,7 @@ class Event:
     def __init__(self, name: str, date: datetime):
         self.name = name
         self.date = date
-        self.time = date.time()
+        self.time = date.time().strftime("%H:%M:%S")
     
     def prepare_dict(self) -> dict:
         data = {
@@ -265,7 +277,7 @@ class Assignment:
     def __init__(self, name: str, date: datetime, subject: str):
         self.name = name
         self.date = date
-        self.time = date.time()
+        self.time = date.time().strftime("%H:%M:%S")
         self.subject = subject
         self.completed = False
     
@@ -280,7 +292,7 @@ class Assignment:
 
         return data
 
-def map_dates(year: int, month: int) -> list[int]:
+def map_dates(year: int, month: int) -> list:
     """
     Maps all dates in the month to weekdays for use in calendar, and returns a tuple containg the first weekday of the month, and the final day
     """
