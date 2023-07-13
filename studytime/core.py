@@ -28,7 +28,6 @@ class SaveInstance:
         self.data = self.load_file()
 
         self.items = self.scan_items()
-        print(self.items)
 
     def add_item(self, item_time: datetime, item: object):
         """
@@ -188,7 +187,8 @@ class SaveInstance:
             for idx, month in enumerate(year["months"]):
                 for date in month:
                     if date["data"] != []:
-                        items.append({datetime(int(year["year"]), idx + 1, int(date["date"])).strftime("%m/%d/%Y"): date["data"]}) # Pretty sure this shouldn't work, but I suppose God is smiling down on me today
+                        items.append({"date": datetime(int(year["year"]), idx + 1, int(date["date"])).strftime("%m/%d/%Y"),
+                                      "data": date["data"]}) # Pretty sure this shouldn't work, but I suppose God is smiling down on me today
         
         return items
 
@@ -197,11 +197,16 @@ class SaveInstance:
         Searches through items for results with specified name
         """
         query = re.compile(fr"{name}")
+        results = []
 
         for date in self.items:
-
-            list(filter(query.match, list(date.keys())))
-
+            print(date)
+            items = date["data"]
+            for item in items:
+                if query.match(item["name"]):
+                    results.append(item)
+        
+        return results
 
     def save_changes(self):
         """
