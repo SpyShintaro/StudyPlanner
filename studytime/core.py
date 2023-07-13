@@ -198,10 +198,9 @@ class SaveInstance:
         """
         query = re.compile(fr"{name}")
 
-        print(query)
-
         for date in self.items:
-            print(date)
+
+            list(filter(query.match, list(date.keys())))
 
 
     def save_changes(self):
