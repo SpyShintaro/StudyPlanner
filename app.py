@@ -49,7 +49,9 @@ class CalendarView(QWidget): # Generates a calendar view containing 35 days
     def initUI(self):
         calendar_layout = QGridLayout()
 
-        dates = self.map_dates() # A list of dates in the month, spaced with zeroes to start at the correct weekday
+        today = datetime.today()
+
+        dates = core.map_dates(today.year, today.month) # A list of dates in the month, spaced with zeroes to start at the correct weekday
 
         for week in range(5): # Iterates through five rows (representing a week)
             for day in range(7): # Iterates through each day in the week, filling out columns
