@@ -7,84 +7,76 @@ Description: The GUI that the user will use to interact with the rest of the pro
 """
 
 # GUI Handling
+from PyQt6.QtWidgets import QMainWindow, QApplication, QWidget, QHBoxLayout, QDialog, QCalendarWidget, QTextEdit
+
 import sys
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import *
+from studytime.core import *
 
-# Datetime handling
-import calendar
-from datetime import datetime
+def get_data(file: str):
+    data = SaveInstance(file)
 
-from studytime import core
+    return data
 
 class MainWindow(QMainWindow):
-    def __init__(self, view):
-        super().__init__()
-
-        self.initUI(view)
-    
-    def initUI(self, view):
-        widget = QWidget()
-        main_layout = QGridLayout()
-
-        tab = QTabWidget()
-        tab.addTab(view, "Calendar")
-
-        main_layout.addWidget(QGroupBox("Item Information"), 1, 1, 4, 2)
-        main_layout.addWidget(tab, 1, 2, 4, 7)
-
-        main_layout.setHorizontalSpacing(25)
-
-        widget.setLayout(main_layout)
-
-        self.setCentralWidget(widget)
-        self.show()
-
-class CalendarView(QWidget): # Generates a calendar view containing 35 days
     def __init__(self):
         super().__init__()
 
-        self.initUI()
+        layout = QHBoxLayout()
+        self.info_box = QTextEdit(parent=self)
+        self.info_box.setReadOnly(True)
+
+        self.date = QCalendarWidget(self)
+        self.date.selectionChanged.connect(self.data_clicked)
+
+        layout.addWidget(self.date)
+        layout.addWidget(self.info_box)
+
+        self.data_clicked()
+
+        main_widget = QWidget()
+        main_widget.setLayout(layout)
+
+        self.setCentralWidget(main_widget)
+
+        self.show()
     
-    def initUI(self):
-        calendar_layout = QGridLayout()
+    def data_clicked(self):
+        data = get_data("dates")
 
-        dates = self.map_dates() # A list of dates in the month, spaced with zeroes to start at the correct weekday
+        date = self.date.selectedDate().toPyDate()
 
-        for week in range(5): # Iterates through five rows (representing a week)
-            for day in range(7): # Iterates through each day in the week, filling out columns
-                day_box = QLabel()
-                
-                try:
-                    date = str(dates.pop())
+        self.update_info_box(date, data.search_date(date))
+    
+    def update_info_box(self, date, data):
 
-                    if date != "0":
-                        day_box.setText(date)
-                except IndexError:
-                    pass
+        text = f"Date: {date.strftime('%d/%m/%Y')}\n"
 
-                calendar_layout.addWidget(day_box, week, day)
+        for item in data:
+            text += f"{item['name']}: {item['time']}\n{item['type']}"
+
+        self.info_box.setText(f"{text}")
         
-        self.setLayout(calendar_layout)
-        self.updateGeometry()
 
-class DateObject(QListWidget):
-    """
-    A widget template for all dates in the calendar
-    """
-    def __init__(self, date):
-        super().__init__()
+class DataDialog(QDialog):
+    def __init__(self, parent, date: datetime, data: list):
+        super().__init__(parent)
 
-        self.header = QTextEdit(f"{date}")
+        data_widget = QTextEdit(self)
 
-    def initUI(self):
-        pass
+        text = f"Date: {date.strftime('%d/%m/%Y')}\n"
 
-def main():
-    app = QApplication(sys.argv)
-    window = MainWindow(CalendarView())
-    sys.exit(app.exec())
+        for item in data:
+            text += f"{item['name']}: {item['time']}\n{item['type']}"
 
+        data_widget.setText(text)
+
+        layout = QHBoxLayout()
+        layout.addWidget(data_widget)
+
+        self.setLayout(layout)
 
 if __name__ == "__main__":
-    main()
+    app = QApplication(sys.argv)
+    window = MainWindow()
+
+    sys.exit(app.exec())
