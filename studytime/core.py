@@ -194,16 +194,29 @@ class SaveInstance:
 
     def search_name(self, name: str) -> list:
         """
-        Searches through items for results with specified name
+        Searches through item list for results with specified name
         """
         query = re.compile(fr"{name.lower()}+")
         results = []
 
         for date in self.items:
-            print(date)
             items = date["data"]
             for item in items:
                 if query.findall(item["name"].lower()):
+                    results.append(item)
+        
+        return results
+
+    def search_date(self, date: datetime):
+        """
+        Searches through item list for any items that match specified date
+        """
+        query = re.compile(fr"{date.month}/{date.day}/{date.year}")
+        results = []
+
+        for date in self.items:
+            if query.findall(date["date"].lower()):
+                for item in date["data"]:
                     results.append(item)
         
         return results
