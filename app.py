@@ -7,7 +7,7 @@ Description: The GUI that the user will use to interact with the rest of the pro
 """
 
 # GUI Handling
-from PyQt6.QtWidgets import QMainWindow, QApplication, QWidget, QHBoxLayout, QDialog, QCalendarWidget, QTextEdit
+from PyQt6.QtWidgets import QMainWindow, QApplication, QWidget, QHBoxLayout, QVBoxLayout, QLineEdit, QCalendarWidget, QTextEdit
 
 import sys
 from studytime.core import *
@@ -21,15 +21,27 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        layout = QHBoxLayout()
+        layout = QHBoxLayout() # Parent Layout
+
+        info_layout = QVBoxLayout() # Information Box Layout
+        
+        self.date_header = QLineEdit(parent=self)
+        self.date_header.setReadOnly(True)
+
         self.info_box = QTextEdit(parent=self)
         self.info_box.setReadOnly(True)
+
+        info_layout.addWidget(self.date_header)
+        info_layout.addWidget(self.info_box)
 
         self.date = QCalendarWidget(self)
         self.date.selectionChanged.connect(self.data_clicked)
 
+        info = QWidget()
+        info.setLayout(info_layout)
+
+        layout.addWidget(info)
         layout.addWidget(self.date)
-        layout.addWidget(self.info_box)
 
         self.data_clicked()
 
@@ -38,6 +50,7 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(main_widget)
 
+        self.setWindowTitle("StudyTime")
         self.show()
     
     def data_clicked(self):
@@ -49,32 +62,14 @@ class MainWindow(QMainWindow):
     
     def update_info_box(self, date, data):
 
-        text = f"Date: {date.strftime('%d/%m/%Y')}\n"
+        text = ""
+        self.date_header.setText(f"Date: {date.strftime('%d/%m/%Y')}\n")
 
         for item in data:
             text += f"{item['name']}: {item['time']}\n{item['type']}"
 
         self.info_box.setText(f"{text}")
         
-
-class DataDialog(QDialog):
-    def __init__(self, parent, date: datetime, data: list):
-        super().__init__(parent)
-
-        data_widget = QTextEdit(self)
-
-        text = f"Date: {date.strftime('%d/%m/%Y')}\n"
-
-        for item in data:
-            text += f"{item['name']}: {item['time']}\n{item['type']}"
-
-        data_widget.setText(text)
-
-        layout = QHBoxLayout()
-        layout.addWidget(data_widget)
-
-        self.setLayout(layout)
-
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
