@@ -3,7 +3,7 @@ StudyPlanner/app
 
 Author: Jake Hickey
 Date: 29/05/23
-Description: The GUI that the user will use to interact with the rest of the program
+Description: User-Friendly GUI to interact with StudyTime functionality
 """
 
 # GUI Handling
@@ -13,11 +13,17 @@ import sys
 from studytime.core import *
 
 def get_data(file: str):
+    """
+    Creates a Save Instance object to interact with the user's data
+    """
     data = SaveInstance(file)
 
     return data
 
 class MainWindow(QMainWindow):
+    """
+    The main application window; will show the current view, as well as item data
+    """
     def __init__(self):
         super().__init__()
 
@@ -35,7 +41,7 @@ class MainWindow(QMainWindow):
         info_layout.addWidget(self.info_box)
 
         self.date = QCalendarWidget(self)
-        self.date.selectionChanged.connect(self.data_clicked)
+        self.date.selectionChanged.connect(self.data_clicked) # Calls whenever the user selects a different date
 
         info = QWidget()
         info.setLayout(info_layout)
@@ -43,7 +49,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(info)
         layout.addWidget(self.date)
 
-        self.data_clicked()
+        self.data_clicked() # Called in order to set the information sidebar to the current date
 
         main_widget = QWidget()
         main_widget.setLayout(layout)
@@ -54,19 +60,26 @@ class MainWindow(QMainWindow):
         self.show()
     
     def data_clicked(self):
+        """
+        Slot function that updates the info sidebar whenever the user selects a new date
+        """
+        
         data = get_data("dates")
 
-        date = self.date.selectedDate().toPyDate()
+        date = self.date.selectedDate().toPyDate() # Converts the selected date of the calendar to a Datetime object
 
         self.update_info_box(date, data.search_date(date))
     
     def update_info_box(self, date, data):
-
+        """
+        Changes the information sidebar to display relevant date information
+        """
+        
         text = ""
-        self.date_header.setText(f"Date: {date.strftime('%d/%m/%Y')}\n")
+        self.date_header.setText(f"Date: {date.strftime('%d/%m/%Y')}\n") # Displays the current date as text
 
         for item in data:
-            text += f"{item['name']}: {item['time']}\n{item['type']}"
+            text += f"{item['name']}: {item['time']}\n{item['type']}" # Shows most relevant item data
 
         self.info_box.setText(f"{text}")
         
