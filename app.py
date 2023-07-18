@@ -7,7 +7,7 @@ Description: User-Friendly GUI to interact with StudyTime functionality
 """
 
 # GUI Handling
-from PyQt6.QtWidgets import QMainWindow, QApplication, QWidget, QHBoxLayout, QVBoxLayout, QLineEdit, QCalendarWidget, QTextEdit
+from PyQt6.QtWidgets import QMainWindow, QApplication, QWidget, QHBoxLayout, QVBoxLayout, QLineEdit, QCalendarWidget, QTextEdit, QDialog
 
 import sys
 from studytime.core import *
@@ -82,6 +82,10 @@ class MainWindow(QMainWindow):
             text += f"{item['name']}: {item['time']}\n{item['type']}" # Shows most relevant item data
 
         self.info_box.setText(f"{text}")
+
+class NewItemDialog(QDialog):
+    def __init__(self):
+        pass
         
 if __name__ == "__main__":
     app = QApplication(sys.argv)
