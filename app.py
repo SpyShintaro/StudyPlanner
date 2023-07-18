@@ -129,6 +129,11 @@ class NewItemDialog(QDialog):
         time_input = QTimeEdit(self)
         time_input.setTime(QTime.currentTime())
 
+        class_text = QLabel("Class", self)
+
+        class_input = QComboBox(self)
+        class_input.addItems(["Applied Computing", "Maths Methods", "Maths Specialist", "Chemistry", "English"])
+
         # Header
         layout.addWidget(header, 0, 0)
 
@@ -147,6 +152,10 @@ class NewItemDialog(QDialog):
         # Time Input
         layout.addWidget(time_text, 4, 0)
         layout.addWidget(time_input, 4, 1)
+
+        # Class Input
+        layout.addWidget(class_text, 5, 0)
+        layout.addWidget(class_input, 5, 1)
 
         self.setLayout(layout)
     
