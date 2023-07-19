@@ -125,6 +125,7 @@ class NewItemDialog(QDialog):
         
         self.type_input = QComboBox(self)
         self.type_input.addItems(["Task", "Event", "Assignment"])
+        self.type_input.currentIndexChanged.connect(self.check_type)
 
         # Date
         date_text = QLabel("Date: ", self)
@@ -194,7 +195,16 @@ class NewItemDialog(QDialog):
         }
 
         return data
-    
+
+    def check_type(self):
+        """
+        Checks the type of item entered into the dialog box. If "Event" is selected, the subject is greyed out
+        """
+        if self.type_input.currentIndex() == 1:
+            self.class_input.setEnabled(False)
+        elif not self.class_input.isEnabled:
+            self.class_input.setEnabled(True)
+
     def add_item(self):
         """
         Gets data from dialog inputs and creates a new item accordingly
