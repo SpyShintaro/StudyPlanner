@@ -7,12 +7,14 @@ Description: User-Friendly GUI to interact with StudyTime functionality
 """
 
 # GUI Handling
-from PyQt6.QtWidgets import (QMainWindow, QApplication, QWidget, QLabel, QPushButton, QHBoxLayout, QVBoxLayout, QGridLayout, QLineEdit, QCalendarWidget, QTextEdit, QDialog,
-                             QDateEdit, QTimeEdit, QComboBox)
+from PyQt6.QtWidgets import (QMainWindow, QApplication, QWidget, QLabel, QPushButton, QHBoxLayout, QVBoxLayout,
+                             QGridLayout, QLineEdit, QCalendarWidget, QTextEdit, QDialog, QDateEdit, QTimeEdit,
+                             QComboBox, QGroupBox)
 from PyQt6.QtCore import Qt, QDate, QTime
 from PyQt6.QtGui import QFont
 
 import sys
+from functools import partial
 from studytime.core import *
 
 def get_data(file: str):
@@ -30,36 +32,37 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        layout = QHBoxLayout() # Parent Layout
+        layout = QGridLayout() # Parent Layout
+        layout.setColumnStretch(1, 2)
 
         info_layout = QVBoxLayout() # Information Box Layout
 
-        self.header_font = QFont("Helvetica", 15)
+        self.header_font = QFont("Helvetica", 13)
         self.header_font.setBold(True)
-        
+
+        self.info_box = QGroupBox("What's On")
+
         self.date_header = QLabel(parent=self)
         self.date_header.setFont(self.header_font)
 
-        self.info_box = QTextEdit(parent=self)
-        self.info_box.setReadOnly(True)
+        self.info_text = QLabel(parent=self)
 
         new_item_btn = QPushButton("Create New Item", self)
         new_item_btn.clicked.connect(self.open_item_dialog)
 
         info_layout.addWidget(self.date_header)
         info_layout.addWidget(new_item_btn)
-        info_layout.addWidget(self.info_box)
+        info_layout.addWidget(self.info_text)
 
+        #self.info_text.setLayout(info_layout)
+        info_layout.setStretch(2, 4)
         self.date = QCalendarWidget(self)
         self.date.selectionChanged.connect(self.data_clicked) # Calls whenever the user selects a different date
 
-        info = QWidget()
-        info.setLayout(info_layout)
+        layout.addLayout(info_layout, 0, 0, 1, 1)
+        layout.addWidget(self.date, 0, 1, 1, 1)
 
-        layout.addWidget(info)
-        layout.addWidget(self.date)
-
-        self.data_clicked() # Called in order to set the information sidebar to the current date
+        self.data = self.data_clicked() # Called in order to set the information sidebar to the current date
 
         main_widget = QWidget()
         main_widget.setLayout(layout)
@@ -67,7 +70,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(main_widget)
 
         self.setWindowTitle("StudyTime")
-        self.show()
+        self.showMaximized()
 
     def open_item_dialog(self):
         """
@@ -85,9 +88,10 @@ class MainWindow(QMainWindow):
 
         date = self.date.selectedDate().toPyDate() # Converts the selected date of the calendar to a Datetime object
 
-        self.update_info_box(date, data.search_date(date))
+        self.update_info_text(date, data.search_date(date))
+        return data
     
-    def update_info_box(self, date, data):
+    def update_info_text(self, date, data):
         """
         Changes the information sidebar to display relevant date information
         """
@@ -96,71 +100,124 @@ class MainWindow(QMainWindow):
         self.date_header.setText(f"Date: {date.strftime('%d/%m/%Y')}\n") # Displays the current date as text
 
         for item in data:
-            text += f"{item['name']}: {item['time']}\n{item['type']}" # Shows most relevant item data
+            text += f"{item['name']}: {item['time']}\n{item['type']}\n" # Shows most relevant item data
 
-        self.info_box.setText(f"{text}")
+        self.info_text.setText(f"{text}")
 
 class NewItemDialog(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
+        self.window = self.parentWidget()
         self.setWindowTitle("Add Item")
         layout = QGridLayout()
 
+        # Header
         header = QLabel(self)
         header.setText("Add New Item")
         header.setFont(parent.header_font)
         
+        # Name
         name_text = QLabel("Name: ", self)
-        name_input = QLineEdit(self)
-
+        self.name_input = QLineEdit(self)
+        
+        # Item Type
         type_text = QLabel("Type: ", self)
         
-        type_input = QComboBox(self)
-        type_input.addItems(["Task", "Event", "Assignment"])
+        self.type_input = QComboBox(self)
+        self.type_input.addItems(["Task", "Event", "Assignment"])
 
+        # Date
         date_text = QLabel("Date: ", self)
 
-        date_input = QDateEdit(self)
-        date_input.setDate(QDate.currentDate())
-        date_input.setCalendarPopup(True)
+        self.date_input = QDateEdit(self)
+        self.date_input.setDate(self.window.date.selectedDate())
+        self.date_input.setCalendarPopup(True)
 
+        # Time
         time_text = QLabel("Time: ", self)
 
-        time_input = QTimeEdit(self)
-        time_input.setTime(QTime.currentTime())
+        self.time_input = QTimeEdit(self)
+        self.time_input.setTime(QTime.currentTime())
 
-        class_text = QLabel("Class", self)
+        # Subject
+        class_text = QLabel("Subject: ", self)
 
-        class_input = QComboBox(self)
-        class_input.addItems(["Applied Computing", "Maths Methods", "Maths Specialist", "Chemistry", "English"])
+        self.class_input = QComboBox(self)
+        self.class_input.addItems(["Applied Computing", "Maths Methods", "Maths Specialist", "Chemistry", "English"])
+
+        # Buttons
+        submit_btn = QPushButton("Submit", self, clicked=self.add_item)
+        cancel_btn = QPushButton("Cancel", self, clicked=self.close)
 
         # Header
         layout.addWidget(header, 0, 0)
 
         # Name Input
         layout.addWidget(name_text, 1, 0)
-        layout.addWidget(name_input, 1, 1)
+        layout.addWidget(self.name_input, 1, 1)
 
         # Type Input
         layout.addWidget(type_text, 2, 0)
-        layout.addWidget(type_input, 2, 1)
+        layout.addWidget(self.type_input, 2, 1)
 
         # Date Input
         layout.addWidget(date_text, 3, 0)
-        layout.addWidget(date_input, 3, 1)
+        layout.addWidget(self.date_input, 3, 1)
 
         # Time Input
         layout.addWidget(time_text, 4, 0)
-        layout.addWidget(time_input, 4, 1)
+        layout.addWidget(self.time_input, 4, 1)
 
         # Class Input
         layout.addWidget(class_text, 5, 0)
-        layout.addWidget(class_input, 5, 1)
+        layout.addWidget(self.class_input, 5, 1)
+
+        # Form Buttons
+        layout.addWidget(submit_btn, 6, 0)
+        layout.addWidget(cancel_btn, 6, 1)
 
         self.setLayout(layout)
     
+    def get_inputs(self):
+        name = self.name_input.text()
+        type = self.type_input.currentIndex()
+        date = self.date_input.date()
+        time = self.time_input.time()
+        subject = self.class_input.currentText()
+
+        data = {
+            "name": name,
+            "type": type,
+            "date": date,
+            "time": time,
+            "subject": subject
+        }
+
+        return data
+    
     def add_item(self):
-        pass
+        """
+        Gets data from dialog inputs and creates a new item accordingly
+        """
+        item_data = self.get_inputs()
+        date = item_data["date"].toPyDate()
+        time = item_data["time"].toPyTime()
+
+        item_datetime = datetime(date.year, date.month, date.day, time.hour, time.minute, 0)
+
+        func = [
+            partial(self.window.data.add_task, subject = item_data["subject"]),
+            partial(self.window.data.add_event),
+            partial(self.window.data.add_assignment, subject = item_data["subject"])
+        ]
+
+        func[item_data["type"]](item_data["name"], item_datetime)
+
+        self.window.update_info_text(item_datetime, self.window.data.search_date(item_datetime))
+        self.window.date.setSelectedDate(item_data["date"])
+        self.close()
+
+        
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
