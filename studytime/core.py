@@ -99,7 +99,8 @@ class SaveInstance:
             if year["year"] == str(target_year): # Checks if the value of the "year" key is the year being searched for
                 return year
         
-        return None
+        self.add_year(target_year)
+        self.get_year(target_year)
     
     def get_month(self, target_year: str, target_month: int) -> list:
         """
@@ -155,12 +156,10 @@ class SaveInstance:
             else:
         """
 
-        data.append(template) # Adding template to the JSON/Python object
+        self.data.append(template) # Adding template to the JSON/Python object
 
         with open(file_path, "w") as f: # Rewrites JSON file using updated data
-            json.dump(data, f, indent=4)
-        
-        print(self.data)
+            json.dump(self.data, f, indent=4)
 
         return template
     

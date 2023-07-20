@@ -46,6 +46,7 @@ class MainWindow(QMainWindow):
         self.date_header.setFont(self.header_font)
 
         self.info_text = QLabel(parent=self)
+        self.info_text.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         new_item_btn = QPushButton("Create New Item", self)
         new_item_btn.clicked.connect(self.open_item_dialog)
@@ -54,12 +55,13 @@ class MainWindow(QMainWindow):
         info_layout.addWidget(new_item_btn)
         info_layout.addWidget(self.info_text)
 
-        #self.info_text.setLayout(info_layout)
         info_layout.setStretch(2, 4)
+        self.info_box.setLayout(info_layout)
+
         self.date = QCalendarWidget(self)
         self.date.selectionChanged.connect(self.data_clicked) # Calls whenever the user selects a different date
 
-        layout.addLayout(info_layout, 0, 0, 1, 1)
+        layout.addWidget(self.info_box, 0, 0, 1, 1)
         layout.addWidget(self.date, 0, 1, 1, 1)
 
         self.data = self.data_clicked() # Called in order to set the information sidebar to the current date
@@ -83,7 +85,6 @@ class MainWindow(QMainWindow):
         """
         Slot function that updates the info sidebar whenever the user selects a new date
         """
-        
         data = get_data("dates")
 
         date = self.date.selectedDate().toPyDate() # Converts the selected date of the calendar to a Datetime object
