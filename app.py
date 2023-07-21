@@ -40,7 +40,7 @@ class MainWindow(QMainWindow):
         self.header_font = QFont("Helvetica", 13)
         self.header_font.setBold(True)
 
-        self.info_box = QGroupBox("What's On")
+        self.info_box = QGroupBox("What's On") # Aesthetic grouping for the sidebar
 
         self.date_header = QLabel(parent=self)
         self.date_header.setFont(self.header_font)
@@ -49,7 +49,7 @@ class MainWindow(QMainWindow):
         self.info_text.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         new_item_btn = QPushButton("Create New Item", self)
-        new_item_btn.clicked.connect(self.open_item_dialog)
+        new_item_btn.clicked.connect(self.open_item_dialog) # Opens a new dialog on button click
 
         info_layout.addWidget(self.date_header)
         info_layout.addWidget(new_item_btn)
@@ -126,7 +126,7 @@ class NewItemDialog(QDialog):
         
         self.type_input = QComboBox(self)
         self.type_input.addItems(["Task", "Event", "Assignment"])
-        self.type_input.currentIndexChanged.connect(self.check_type)
+        self.type_input.currentIndexChanged.connect(self.event_toggle)
 
         # Date
         date_text = QLabel("Date: ", self)
@@ -151,6 +151,9 @@ class NewItemDialog(QDialog):
         submit_btn = QPushButton("Submit", self, clicked=self.add_item)
         cancel_btn = QPushButton("Cancel", self, clicked=self.close)
 
+        # Error Message Box
+        self.error_message = QTextEdit("", self)
+
         # Header
         layout.addWidget(header, 0, 0)
 
@@ -174,13 +177,19 @@ class NewItemDialog(QDialog):
         layout.addWidget(class_text, 5, 0)
         layout.addWidget(self.class_input, 5, 1)
 
+        # Error Dialog
+        layout.addWidget(self.error_message, 6, 0, 1, 2)
+        
         # Form Buttons
-        layout.addWidget(submit_btn, 6, 0)
-        layout.addWidget(cancel_btn, 6, 1)
+        layout.addWidget(submit_btn, 7, 0)
+        layout.addWidget(cancel_btn, 7, 1)
 
         self.setLayout(layout)
     
     def get_inputs(self):
+        """
+        Returns all of the user inputted data from the GUI as a dictionary
+        """
         name = self.name_input.text()
         type = self.type_input.currentIndex()
         date = self.date_input.date()
@@ -197,11 +206,11 @@ class NewItemDialog(QDialog):
 
         return data
 
-    def check_type(self):
+    def event_toggle(self):
         """
         Checks the type of item entered into the dialog box. If "Event" is selected, the subject is greyed out
         """
-        if self.type_input.currentIndex() == 1:
+        if self.type_input.currentIndex() == 1: # Checks if the type_input has the "Event" index chosen
             self.class_input.setEnabled(False)
         elif not self.class_input.isEnabled:
             self.class_input.setEnabled(True)
@@ -211,25 +220,28 @@ class NewItemDialog(QDialog):
         Gets data from dialog inputs and creates a new item accordingly
         """
         item_data = self.get_inputs()
-        date = item_data["date"].toPyDate()
-        time = item_data["time"].toPyTime()
 
-        item_datetime = datetime(date.year, date.month, date.day, time.hour, time.minute, 0)
+        if item_data["name"] == "":
+            self.error_message.setText("Please input a name and try again.")
+        else:
+            date = item_data["date"].toPyDate()
+            time = item_data["time"].toPyTime()
 
-        func = [
-            partial(self.window.data.add_task, subject = item_data["subject"]),
-            partial(self.window.data.add_event),
-            partial(self.window.data.add_assignment, subject = item_data["subject"])
-        ]
+            item_datetime = datetime(date.year, date.month, date.day, time.hour, time.minute, 0)
 
-        func[item_data["type"]](item_data["name"], item_datetime)
+            func = [
+                partial(self.window.data.add_task, subject = item_data["subject"]), # Subject is a necessary argument for this function, but it's not needed for all versions so it's passed here
+                partial(self.window.data.add_event),
+                partial(self.window.data.add_assignment, subject = item_data["subject"]) # See above
+            ]
 
-        self.window.update_info_text(item_datetime, self.window.data.search_date(item_datetime))
-        self.window.date.setSelectedDate(item_data["date"])
-        self.close()
+            func[item_data["type"]](item_data["name"], item_datetime) # Selects the relevant add function from studytime.core, and passes arguments
+
+            self.window.update_info_text(item_datetime, self.window.data.search_date(item_datetime))
+            self.window.date.setSelectedDate(item_data["date"])
+            self.close()
 
         
-
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
