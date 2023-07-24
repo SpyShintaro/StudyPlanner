@@ -9,7 +9,7 @@ Description: User-Friendly GUI to interact with StudyTime functionality
 # GUI Handling
 from PyQt6.QtWidgets import (QMainWindow, QApplication, QWidget, QLabel, QPushButton, QHBoxLayout, QVBoxLayout,
                              QGridLayout, QLineEdit, QCalendarWidget, QTextEdit, QDialog, QDateEdit, QTimeEdit,
-                             QComboBox, QGroupBox)
+                             QComboBox, QGroupBox, QScrollArea, QTableWidget, QTableWidgetItem)
 from PyQt6.QtCore import Qt, QDate, QTime
 from PyQt6.QtGui import QFont
 
@@ -45,21 +45,24 @@ class MainWindow(QMainWindow):
         self.date_header = QLabel(parent=self)
         self.date_header.setFont(self.header_font)
 
-        self.info_text = QLabel(parent=self)
-        self.info_text.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.info_scroll = InfoWrapper(parent=self)
+
+        #self.info_text = QLabel(parent=self)
+        #self.info_text.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         new_item_btn = QPushButton("Create New Item", self)
-        new_item_btn.clicked.connect(self.open_item_dialog) # Opens a new dialog on button click
+        new_item_btn.clicked.connect(self.create_item_dialog) # Opens a new dialog on button click
 
         info_layout.addWidget(self.date_header)
         info_layout.addWidget(new_item_btn)
-        info_layout.addWidget(self.info_text)
+        info_layout.addWidget(self.info_scroll)
 
         info_layout.setStretch(2, 4)
         self.info_box.setLayout(info_layout)
 
         self.date = QCalendarWidget(self)
         self.date.selectionChanged.connect(self.data_clicked) # Calls whenever the user selects a different date
+        self.date.setVerticalHeaderFormat(QCalendarWidget.VerticalHeaderFormat(0))
 
         layout.addWidget(self.info_box, 0, 0, 1, 1)
         layout.addWidget(self.date, 0, 1, 1, 1)
@@ -74,7 +77,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("StudyTime")
         self.showMaximized()
 
-    def open_item_dialog(self):
+    def create_item_dialog(self):
         """
         Creates and displays a dialog for the user to add a new item
         """
@@ -100,10 +103,34 @@ class MainWindow(QMainWindow):
         text = ""
         self.date_header.setText(f"Date: {date.strftime('%d/%m/%Y')}\n") # Displays the current date as text
 
-        for item in data:
-            text += f"{item['name']}: {item['time']}\n{item['type']}\n" # Shows most relevant item data
+        self.info_scroll.update(data)
 
-        self.info_text.setText(f"{text}")
+    def open_item_details(self, item: dict):
+        pass
+
+class InfoWrapper(QScrollArea):
+    def __init__(self, parent):
+        super().__init__(parent)
+        
+        self.table = QTableWidget(0, 2, self)
+        self.table.setShowGrid(False)
+
+        self.parent = parent
+    
+    def update(self, data):
+
+        self.table.clear()
+        self.table.setRowCount(len(data))
+
+        for idx, item in enumerate(data):
+            self.table.setItem(idx, 0, QTableWidgetItem(item["name"]))
+            self.table.setItem(idx, 1, QTableWidgetItem(item["time"]))
+
+
+
+class ItemDetailDialog(QDialog):
+    def __init__(self, parent, item):
+        super().__init__(parent)
 
 class NewItemDialog(QDialog):
     def __init__(self, parent):
