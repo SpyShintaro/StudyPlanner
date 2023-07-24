@@ -99,8 +99,6 @@ class MainWindow(QMainWindow):
         """
         Changes the information sidebar to display relevant date information
         """
-        
-        text = ""
         self.date_header.setText(f"Date: {date.strftime('%d/%m/%Y')}\n") # Displays the current date as text
 
         self.info_scroll.update(data)
