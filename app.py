@@ -103,32 +103,54 @@ class MainWindow(QMainWindow):
 
         self.info_scroll.update(data)
 
-    def open_item_details(self, item: dict):
-        pass
+    def open_item_details(self, item):
+        dialog = ItemDetailDialog(self, item)
 
 class InfoWrapper(QScrollArea):
     def __init__(self, parent):
         super().__init__(parent)
-        
-        self.table = QTableWidget(0, 2, self)
+        layout = QVBoxLayout()
+
+        self.table = QTableWidget(0, 1, self)
+        self.table.cellDoubleClicked.connect(lambda: self.parent.open_item_details(self.date[f"{self.table.currentItem()}"]))
         self.table.setShowGrid(False)
+        self.table.horizontalScrollBar().setEnabled(False)
+
+        # Removing the headers from the table
+        self.table.horizontalHeader().hide()
+        self.table.verticalHeader().hide()
+
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.table)
+
+        self.setLayout(layout)
 
         self.parent = parent
     
     def update(self, data):
-
         self.table.clear()
         self.table.setRowCount(len(data))
+        self.table.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.table.setColumnWidth(0, self.table.width())
+        self.date = {}
 
         for idx, item in enumerate(data):
-            self.table.setItem(idx, 0, QTableWidgetItem(item["name"]))
-            self.table.setItem(idx, 1, QTableWidgetItem(item["time"]))
+            cell = QTableWidgetItem(f"{item['name']}: {item['time']}")
+            cell.setFlags(~Qt.ItemFlag.ItemIsEditable)
+
+            self.date[f"{cell}"] = item
+            self.table.setItem(idx, 0, cell)
 
 
 
 class ItemDetailDialog(QDialog):
     def __init__(self, parent, item):
         super().__init__(parent)
+
+        self.window = parent
+        self.setWindowTitle("Item Details:")
+
+        self.show()
 
 class NewItemDialog(QDialog):
     def __init__(self, parent):
