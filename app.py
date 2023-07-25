@@ -113,8 +113,8 @@ class InfoWrapper(QScrollArea):
 
         self.table = QTableWidget(0, 1, self)
         self.table.cellDoubleClicked.connect(lambda: self.parent.open_item_details(self.date[f"{self.table.currentItem()}"]))
-        self.table.setShowGrid(False)
-        self.table.horizontalScrollBar().setEnabled(False)
+        self.table.setShowGrid(False) # Removes cell borders
+        self.table.horizontalScrollBar().setEnabled(False) # Disabling scroll bar
 
         # Removing the headers from the table
         self.table.horizontalHeader().hide()
@@ -130,7 +130,7 @@ class InfoWrapper(QScrollArea):
     def update(self, data):
         self.table.clear()
         self.table.setRowCount(len(data))
-        self.table.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.table.setFocusPolicy(Qt.FocusPolicy.NoFocus) # Removes the outline that appears when a cell is clicked
         self.table.setColumnWidth(0, self.table.width())
         self.date = {}
 
@@ -149,6 +149,28 @@ class ItemDetailDialog(QDialog):
 
         self.window = parent
         self.setWindowTitle("Item Details:")
+
+        layout = QGridLayout(self)
+
+        # Column 1
+        name_label = QLabel("Item Name", self)
+        name_label.setFont(parent.header_font)
+
+        name_text = QLineEdit(item["name"], self)
+        name_text.setReadOnly(True)
+
+        time_label = QLabel("Time", self)
+        time_label.setFont(parent.header_font)
+
+        time_text = QTextEdit(item["time"], self)
+        time_text.setReadOnly(True)
+
+        layout.addWidget(name_label, 0, 0)
+        layout.addWidget(name_text, 1, 0)
+        layout.addWidget(time_label, 2, 0)
+        layout.addWidget(time_text, 3, 0)
+
+        self.setLayout(layout)
 
         self.show()
 
