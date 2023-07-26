@@ -9,7 +9,7 @@ Description: User-Friendly GUI to interact with StudyTime functionality
 # GUI Handling
 from PyQt6.QtWidgets import (QMainWindow, QApplication, QWidget, QLabel, QPushButton, QHBoxLayout, QVBoxLayout,
                              QGridLayout, QLineEdit, QCalendarWidget, QTextEdit, QDialog, QDateEdit, QTimeEdit,
-                             QComboBox, QGroupBox, QScrollArea, QTableWidget, QTableWidgetItem)
+                             QComboBox, QGroupBox, QScrollArea, QTableWidget, QTableWidgetItem, QCheckBox)
 from PyQt6.QtCore import Qt, QDate, QTime
 from PyQt6.QtGui import QFont
 
@@ -183,6 +183,7 @@ class ItemDetailDialog(QDialog):
         
         self.type = QComboBox(self)
         self.type.addItems(["Task", "Event", "Assignment"])
+        self.type.currentIndexChanged.connect(self.event_toggle)
         self.type.setEnabled(False)
 
         try:
@@ -192,6 +193,7 @@ class ItemDetailDialog(QDialog):
         
         self.subject_input.setEnabled(False)
 
+        set_notification = QCheckBox("Toggle Notification", self)
         edit_toggle = QPushButton("Edit", self, clicked=self.toggle_editing)
 
         # Subgrid for Column 1
@@ -211,7 +213,9 @@ class ItemDetailDialog(QDialog):
 
         layout.addWidget(self.subject_input, 1, 1)
         layout.addWidget(self.type, 2, 1)
-        layout.addWidget(edit_toggle, 2, 2)
+        layout.addWidget(set_notification, 2, 2)
+
+        layout.addWidget(edit_toggle, 3, 1)
 
         self.setLayout(layout)
 
@@ -223,7 +227,37 @@ class ItemDetailDialog(QDialog):
         self.time_text.setReadOnly(not self.time_text.isReadOnly())
         self.subject_input.setEnabled(not self.subject_input.isEnabled())
         self.type.setEnabled(not self.type.isEnabled())
-        
+    
+    def event_toggle(self):
+        """
+        Checks the type of item entered into the dialog box. If "Event" is selected, the subject is greyed out
+        """
+        if self.type.currentIndex() == 1: # Checks if the type_input has the "Event" index chosen
+            self.subject_input.setEnabled(False)
+            self.subject_input.setCurrentText("None")
+        elif not self.subject_input.isEnabled():
+            self.subject_input.setEnabled(True)
+    
+    def get_inputs(self):
+        """
+        Gets information from all inputs
+        """
+
+        name = self.name_text.text()
+        type = self.type.currentIndex()
+        date = self.date_input.date()
+        time = self.time_text.time()
+        subject = self.subject_input.currentText()
+
+        data = {
+            "name": name,
+            "type": type,
+            "date": date,
+            "time": time,
+            "subject": subject
+        }
+
+        return data
 
 class NewItemDialog(QDialog):
     def __init__(self, parent):
@@ -312,7 +346,7 @@ class NewItemDialog(QDialog):
         """
         name = self.name_input.text()
         type = self.type_input.currentIndex()
-        date = self.self.date_input.date()
+        date = self.date_input.date()
         time = self.time_input.time()
         subject = self.class_input.currentText()
 
