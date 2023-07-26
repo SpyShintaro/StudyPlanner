@@ -228,6 +228,9 @@ class SaveInstance:
 
         with open(file_path, "w") as f:
             json.dump(self.data, f, indent=4)
+        
+        self.scan_items()
+
 
     def organise_times(self, data):
         """

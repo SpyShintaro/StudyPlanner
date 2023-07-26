@@ -9,7 +9,7 @@ Description: User-Friendly GUI to interact with StudyTime functionality
 # GUI Handling
 from PyQt6.QtWidgets import (QMainWindow, QApplication, QWidget, QLabel, QPushButton, QHBoxLayout, QVBoxLayout,
                              QGridLayout, QLineEdit, QCalendarWidget, QTextEdit, QDialog, QDateEdit, QTimeEdit,
-                             QComboBox, QGroupBox)
+                             QComboBox, QGroupBox, QScrollArea, QTableWidget, QTableWidgetItem, QCheckBox)
 from PyQt6.QtCore import Qt, QDate, QTime
 from PyQt6.QtGui import QFont
 
@@ -45,21 +45,24 @@ class MainWindow(QMainWindow):
         self.date_header = QLabel(parent=self)
         self.date_header.setFont(self.header_font)
 
-        self.info_text = QLabel(parent=self)
-        self.info_text.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.info_scroll = InfoWrapper(parent=self)
+
+        #self.info_text = QLabel(parent=self)
+        #self.info_text.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         new_item_btn = QPushButton("Create New Item", self)
-        new_item_btn.clicked.connect(self.open_item_dialog) # Opens a new dialog on button click
+        new_item_btn.clicked.connect(self.create_item_dialog) # Opens a new dialog on button click
 
         info_layout.addWidget(self.date_header)
         info_layout.addWidget(new_item_btn)
-        info_layout.addWidget(self.info_text)
+        info_layout.addWidget(self.info_scroll)
 
         info_layout.setStretch(2, 4)
         self.info_box.setLayout(info_layout)
 
         self.date = QCalendarWidget(self)
-        self.date.selectionChanged.connect(self.data_clicked) # Calls whenever the user selects a different date
+        self.date.clicked.connect(self.data_clicked) # Calls whenever the user selects a different date
+        self.date.setVerticalHeaderFormat(QCalendarWidget.VerticalHeaderFormat(0))
 
         layout.addWidget(self.info_box, 0, 0, 1, 1)
         layout.addWidget(self.date, 0, 1, 1, 1)
@@ -74,7 +77,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("StudyTime")
         self.showMaximized()
 
-    def open_item_dialog(self):
+    def create_item_dialog(self):
         """
         Creates and displays a dialog for the user to add a new item
         """
@@ -96,14 +99,165 @@ class MainWindow(QMainWindow):
         """
         Changes the information sidebar to display relevant date information
         """
-        
-        text = ""
         self.date_header.setText(f"Date: {date.strftime('%d/%m/%Y')}\n") # Displays the current date as text
 
-        for item in data:
-            text += f"{item['name']}: {item['time']}\n{item['type']}\n" # Shows most relevant item data
+        self.info_scroll.update(data)
 
-        self.info_text.setText(f"{text}")
+    def open_item_details(self, item):
+        dialog = ItemDetailDialog(self, item)
+
+class InfoWrapper(QScrollArea):
+    def __init__(self, parent):
+        super().__init__(parent)
+        layout = QVBoxLayout()
+
+        self.table = QTableWidget(0, 1, self)
+        self.table.cellDoubleClicked.connect(lambda: self.parent.open_item_details(self.date[f"{self.table.currentItem()}"]))
+        self.table.setShowGrid(False) # Removes cell borders
+        self.table.horizontalScrollBar().setEnabled(False) # Disabling scroll bar
+
+        # Removing the headers from the table
+        self.table.horizontalHeader().hide()
+        self.table.verticalHeader().hide()
+
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.table)
+
+        self.setLayout(layout)
+        self.parent = parent
+    
+    def update(self, data):
+        self.table.clear()
+        self.table.setRowCount(len(data))
+        self.table.setFocusPolicy(Qt.FocusPolicy.NoFocus) # Removes the outline that appears when a cell is clicked
+        self.table.setColumnWidth(0, self.table.width())
+        self.date = {}
+
+        for idx, item in enumerate(data):
+            cell = QTableWidgetItem(f"{item['name']}: {item['time']}")
+            cell.setFlags(~Qt.ItemFlag.ItemIsEditable)
+
+            self.date[f"{cell}"] = item
+            self.table.setItem(idx, 0, cell)
+        
+        self.table.resizeColumnsToContents()
+
+class ItemDetailDialog(QDialog):
+    def __init__(self, parent, item):
+        super().__init__(parent)
+
+        self.window = parent
+        self.setWindowTitle(f"{item['type']} Info")
+
+        layout = QGridLayout(self)
+
+        # Column 1
+        name_label = QLabel("Item Name", self)
+        name_label.setFont(parent.header_font)
+
+        self.name_text = QLineEdit(item["name"], self)
+        self.name_text.setReadOnly(True)
+
+        # Subgrid for Column 1
+        datetime_layout = QGridLayout()
+
+        time_label = QLabel("Time", self)
+        time_label.setFont(parent.header_font)
+
+        self.time_text = QTimeEdit(QTime.fromString(item["time"], "HH:mm:ss"), self)
+        self.time_text.setReadOnly(True)
+
+        date_label = QLabel("Date")
+        date_label.setFont(parent.header_font)
+
+        self.date_input = QDateEdit(self)
+        self.date_input.setDate(parent.date.selectedDate())
+        self.date_input.setReadOnly(True)
+
+        # Column 2
+        subject_label = QLabel("Subject", self)
+        subject_label.setFont(parent.header_font)
+
+        self.subject_input = QComboBox(self)
+        self.subject_input.addItems(["None", "Applied Computing", "Maths Specialist", "Maths Methods", "English", "Chemistry"])
+        
+        self.type = QComboBox(self)
+        self.type.addItems(["Task", "Event", "Assignment"])
+        self.type.currentIndexChanged.connect(self.event_toggle)
+        self.type.setEnabled(False)
+
+        try:
+            self.subject_input.setCurrentText(item["subject"])
+        except KeyError:
+            self.subject_input.setCurrentText("None")
+        
+        self.subject_input.setEnabled(False)
+
+        set_notification = QCheckBox("Toggle Notification", self)
+        edit_toggle = QPushButton("Edit", self, clicked=self.toggle_editing)
+
+        # Subgrid for Column 1
+        datetime_layout.addWidget(time_label, 0, 0)
+        datetime_layout.addWidget(self.time_text, 0, 1)
+        datetime_layout.addWidget(date_label, 1, 0)
+        datetime_layout.addWidget(self.date_input, 1, 1)
+
+        # Column 1
+        layout.addWidget(name_label, 0, 0)
+        layout.addWidget(self.name_text, 1, 0)
+        layout.addLayout(datetime_layout, 2, 0)
+
+        # Column 2
+        layout.addWidget(subject_label, 0, 1)
+        layout.addWidget(self.subject_input, 1, 1)
+
+        layout.addWidget(self.subject_input, 1, 1)
+        layout.addWidget(self.type, 2, 1)
+        layout.addWidget(set_notification, 2, 2)
+
+        layout.addWidget(edit_toggle, 3, 1)
+
+        self.setLayout(layout)
+
+        self.show()
+    
+    def toggle_editing(self):
+        self.name_text.setReadOnly(not self.name_text.isReadOnly())
+        self.date_input.setReadOnly(not self.date_input.isReadOnly())
+        self.time_text.setReadOnly(not self.time_text.isReadOnly())
+        self.subject_input.setEnabled(not self.subject_input.isEnabled())
+        self.type.setEnabled(not self.type.isEnabled())
+    
+    def event_toggle(self):
+        """
+        Checks the type of item entered into the dialog box. If "Event" is selected, the subject is greyed out
+        """
+        if self.type.currentIndex() == 1: # Checks if the type_input has the "Event" index chosen
+            self.subject_input.setEnabled(False)
+            self.subject_input.setCurrentText("None")
+        elif not self.subject_input.isEnabled():
+            self.subject_input.setEnabled(True)
+    
+    def get_inputs(self):
+        """
+        Gets information from all inputs
+        """
+
+        name = self.name_text.text()
+        type = self.type.currentIndex()
+        date = self.date_input.date()
+        time = self.time_text.time()
+        subject = self.subject_input.currentText()
+
+        data = {
+            "name": name,
+            "type": type,
+            "date": date,
+            "time": time,
+            "subject": subject
+        }
+
+        return data
 
 class NewItemDialog(QDialog):
     def __init__(self, parent):
@@ -118,7 +272,7 @@ class NewItemDialog(QDialog):
         header.setFont(parent.header_font)
         
         # Name
-        name_text = QLabel("Name: ", self)
+        self.name_text = QLabel("Name: ", self)
         self.name_input = QLineEdit(self)
         
         # Item Type
@@ -136,7 +290,7 @@ class NewItemDialog(QDialog):
         self.date_input.setCalendarPopup(True)
 
         # Time
-        time_text = QLabel("Time: ", self)
+        self.time_text = QLabel("Time: ", self)
 
         self.time_input = QTimeEdit(self)
         self.time_input.setTime(QTime.currentTime())
@@ -145,7 +299,7 @@ class NewItemDialog(QDialog):
         class_text = QLabel("Subject: ", self)
 
         self.class_input = QComboBox(self)
-        self.class_input.addItems(["Applied Computing", "Maths Methods", "Maths Specialist", "Chemistry", "English"])
+        self.class_input.addItems(["None", "Applied Computing", "Maths Methods", "Maths Specialist", "Chemistry", "English"])
 
         # Buttons
         submit_btn = QPushButton("Submit", self, clicked=self.add_item)
@@ -158,7 +312,7 @@ class NewItemDialog(QDialog):
         layout.addWidget(header, 0, 0)
 
         # Name Input
-        layout.addWidget(name_text, 1, 0)
+        layout.addWidget(self.name_text, 1, 0)
         layout.addWidget(self.name_input, 1, 1)
 
         # Type Input
@@ -170,7 +324,7 @@ class NewItemDialog(QDialog):
         layout.addWidget(self.date_input, 3, 1)
 
         # Time Input
-        layout.addWidget(time_text, 4, 0)
+        layout.addWidget(self.time_text, 4, 0)
         layout.addWidget(self.time_input, 4, 1)
 
         # Class Input
@@ -212,6 +366,7 @@ class NewItemDialog(QDialog):
         """
         if self.type_input.currentIndex() == 1: # Checks if the type_input has the "Event" index chosen
             self.class_input.setEnabled(False)
+            self.class_input.setCurrentText("None")
         elif not self.class_input.isEnabled:
             self.class_input.setEnabled(True)
 
@@ -237,8 +392,8 @@ class NewItemDialog(QDialog):
 
             func[item_data["type"]](item_data["name"], item_datetime) # Selects the relevant add function from studytime.core, and passes arguments
 
-            self.window.update_info_text(item_datetime, self.window.data.search_date(item_datetime))
             self.window.date.setSelectedDate(item_data["date"])
+            self.window.update_info_text(item_datetime, self.window.data.search_date(item_datetime))
             self.close()
 
         
