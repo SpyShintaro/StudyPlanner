@@ -169,7 +169,6 @@ class InfoWrapper(QScrollArea):
         self.table.clear()
         self.table.setRowCount(len(data))
         self.table.setFocusPolicy(Qt.FocusPolicy.NoFocus) # Removes the outline that appears when a cell is clicked
-        self.table.setColumnWidth(0, self.table.width())
         self.date = {}
 
         for idx, item in enumerate(data):
