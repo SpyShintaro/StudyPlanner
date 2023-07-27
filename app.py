@@ -39,6 +39,7 @@ class MainWindow(QMainWindow):
 
         self.search_bar = QLineEdit(self)
         self.search_bar.textChanged.connect(self.update_search_bar)
+        self.search_bar.returnPressed.connect(self.editing_finished)
 
         self.search_results = QCompleter(self)
         self.search_results.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
@@ -133,7 +134,13 @@ class MainWindow(QMainWindow):
         model = QStringListModel(data)
         
         self.search_results.setModel(model)
-            
+    
+    def editing_finished(self):
+        """
+        Takes the user to whatever item corresponds to the current search query. If no matches exist, nothing happens
+        """
+        item = self.data.search_name(self.search_bar.text())
+        print(item)
 
 class InfoWrapper(QScrollArea):
     def __init__(self, parent):

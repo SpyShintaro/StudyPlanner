@@ -15,6 +15,7 @@ from datetime import datetime
 import calendar
 import json
 import re
+import difflib
 
 class SaveInstance:
     """
@@ -204,7 +205,7 @@ class SaveInstance:
                 if query.findall(item["name"].lower()):
                     results.append(item)
         
-        return results
+        return sorted(results, key=lambda x: difflib.SequenceMatcher(None, x["name"], name).ratio(), reverse=True)
 
     def search_date(self, date: datetime):
         """
@@ -218,7 +219,7 @@ class SaveInstance:
                 for item in date["data"]:
                     results.append(item)
         
-        return results
+        return sorted(results, key=lambda x: difflib.SequenceMatcher(None, x["date"], date).ratio(), reverse=True)
 
     def save_changes(self):
         """
