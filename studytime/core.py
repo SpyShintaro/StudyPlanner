@@ -203,6 +203,7 @@ class SaveInstance:
             items = date["data"]
             for item in items:
                 if query.findall(item["name"].lower()):
+                    item["date"] = date["date"]
                     results.append(item)
         
         return sorted(results, key=lambda x: difflib.SequenceMatcher(None, x["name"], name).ratio(), reverse=True)
@@ -219,7 +220,7 @@ class SaveInstance:
                 for item in date["data"]:
                     results.append(item)
         
-        return sorted(results, key=lambda x: difflib.SequenceMatcher(None, x["date"], date).ratio(), reverse=True)
+        return results
 
     def save_changes(self):
         """
