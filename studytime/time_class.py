@@ -35,7 +35,7 @@ class Month:
 
 class Date:
     def __init__(self, date: datetime.day) -> None:
-        self.name = f"{date}"
+        self.name = f"{str(date).rjust(2, '0')}"
         self.items = []
     
     def add_item(self, item):

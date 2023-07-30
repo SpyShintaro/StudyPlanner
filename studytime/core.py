@@ -12,9 +12,7 @@ else:
     from studytime.time_class import *
 
 from datetime import datetime
-import calendar
-import json
-import re
+import calendar, json, re, difflib
 
 class SaveInstance:
     """
@@ -34,7 +32,7 @@ class SaveInstance:
         A generic method for adding organizational items to the relevant date
         """
         year, month, day = item_time.year, item_time.month, item_time.day
-        data = self.get_date(year, month, day)
+        data = self.get_date(year, month, str(day).rjust(2, "0"))
 
         data.append(item.prepare_dict())
         data.sort(key=lambda x : x["time"]) # Sorts the date items by their timestamp in ascending order
@@ -117,7 +115,7 @@ class SaveInstance:
         month = self.get_month(target_year, target_month)
 
         for date in month:
-            if date["date"] == str(target_date):
+            if str(date["date"]) == str(target_date):
                 return date["data"]
     
     def new_file(self):
@@ -177,9 +175,9 @@ class SaveInstance:
 
         return data
 
-    def scan_items(self):
+    def scan_items(self) -> list:
         """
-        Scans through the save data for any organizational items
+        Scans through the save data for any organizational items and returns them as a list
         """
         items = []
         for year in self.data:
@@ -202,15 +200,16 @@ class SaveInstance:
             items = date["data"]
             for item in items:
                 if query.findall(item["name"].lower()):
+                    item["date"] = date["date"]
                     results.append(item)
         
-        return results
+        return sorted(results, key=lambda x: difflib.SequenceMatcher(None, x["name"], name).ratio(), reverse=True)
 
-    def search_date(self, date: datetime):
+    def search_date(self, date_time: datetime):
         """
         Searches through item list for any items that match specified date
         """
-        query = re.compile(fr"{date.month}/{date.day}/{date.year}")
+        query = re.compile(fr"{date_time.month}/{str(date_time.day).rjust(2, '0')}/{date_time.year}")
         results = []
 
         for date in self.items:
@@ -249,7 +248,7 @@ class Task:
         Creates a dictionary object
         """
         self.name = name
-        self.date = date
+        self.date = f"{date.year}-{date.month}-{str(date.day).rjust(2, '0')}"
         self.time = date.time().strftime("%H:%M:%S")
         self.subject = subject
         self.completed = False

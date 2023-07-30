@@ -9,8 +9,8 @@ Description: User-Friendly GUI to interact with StudyTime functionality
 # GUI Handling
 from PyQt6.QtWidgets import (QMainWindow, QApplication, QWidget, QLabel, QPushButton, QHBoxLayout, QVBoxLayout,
                              QGridLayout, QLineEdit, QCalendarWidget, QTextEdit, QDialog, QDateEdit, QTimeEdit,
-                             QComboBox, QGroupBox, QScrollArea, QTableWidget, QTableWidgetItem, QCheckBox)
-from PyQt6.QtCore import Qt, QDate, QTime
+                             QComboBox, QGroupBox, QScrollArea, QTableWidget, QTableWidgetItem, QCheckBox, QCompleter)
+from PyQt6.QtCore import Qt, QDate, QTime, QStringListModel
 from PyQt6.QtGui import QFont
 
 import sys
@@ -37,6 +37,14 @@ class MainWindow(QMainWindow):
 
         info_layout = QVBoxLayout() # Information Box Layout
 
+        self.search_bar = QLineEdit(self)
+        self.search_bar.textChanged.connect(self.update_search_bar)
+        self.search_bar.returnPressed.connect(self.editing_finished)
+
+        self.search_results = QCompleter(self)
+        self.search_results.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self.search_bar.setCompleter(self.search_results)
+
         self.header_font = QFont("Helvetica", 13)
         self.header_font.setBold(True)
 
@@ -62,10 +70,14 @@ class MainWindow(QMainWindow):
 
         self.date = QCalendarWidget(self)
         self.date.clicked.connect(self.data_clicked) # Calls whenever the user selects a different date
+        self.date.selectionChanged.connect(self.data_clicked)
+        
         self.date.setVerticalHeaderFormat(QCalendarWidget.VerticalHeaderFormat(0))
 
-        layout.addWidget(self.info_box, 0, 0, 1, 1)
-        layout.addWidget(self.date, 0, 1, 1, 1)
+        layout.addWidget(self.search_bar, 0, 1, 1, 1)
+
+        layout.addWidget(self.info_box, 1, 0, 1, 1)
+        layout.addWidget(self.date, 1, 1, 1, 1)
 
         self.data = self.data_clicked() # Called in order to set the information sidebar to the current date
 
@@ -95,7 +107,7 @@ class MainWindow(QMainWindow):
         self.update_info_text(date, data.search_date(date))
         return data
     
-    def update_info_text(self, date, data):
+    def update_info_text(self, date: datetime, data):
         """
         Changes the information sidebar to display relevant date information
         """
@@ -104,7 +116,34 @@ class MainWindow(QMainWindow):
         self.info_scroll.update(data)
 
     def open_item_details(self, item):
+        """
+        Creates an dialog to display the selected item details
+        """
         dialog = ItemDetailDialog(self, item)
+    
+    def update_search_bar(self):
+        """
+        Updates search results whenever the user updates their query
+        """
+        data = []
+
+        for date in self.data.scan_items():
+            data.append([item["name"] for item in date["data"]])
+        
+        data = [item for sublist in data for item in sublist] # Flattens the list
+        model = QStringListModel(data)
+        
+        self.search_results.setModel(model)
+    
+    def editing_finished(self):
+        """
+        Takes the user to whatever item corresponds to the current search query. If no matches exist, nothing happens
+        """
+        item = self.data.search_name(self.search_bar.text())[0]
+        date = datetime.strptime(item["date"], "%m/%d/%Y")
+
+        self.date.setSelectedDate(QDate.fromString(item["date"], "MM/dd/yyyy"))
+        self.update_info_text(date, self.data.search_date(date))
 
 class InfoWrapper(QScrollArea):
     def __init__(self, parent):
@@ -130,7 +169,6 @@ class InfoWrapper(QScrollArea):
         self.table.clear()
         self.table.setRowCount(len(data))
         self.table.setFocusPolicy(Qt.FocusPolicy.NoFocus) # Removes the outline that appears when a cell is clicked
-        self.table.setColumnWidth(0, self.table.width())
         self.date = {}
 
         for idx, item in enumerate(data):
@@ -195,6 +233,7 @@ class ItemDetailDialog(QDialog):
 
         set_notification = QCheckBox("Toggle Notification", self)
         edit_toggle = QPushButton("Edit", self, clicked=self.toggle_editing)
+        remove_btn = QPushButton("DELETE", self, clicked=lambda : self.remove_item(item))
 
         # Subgrid for Column 1
         datetime_layout.addWidget(time_label, 0, 0)
@@ -216,6 +255,7 @@ class ItemDetailDialog(QDialog):
         layout.addWidget(set_notification, 2, 2)
 
         layout.addWidget(edit_toggle, 3, 1)
+        layout.addWidget(remove_btn, 3, 2)
 
         self.setLayout(layout)
 
@@ -258,6 +298,17 @@ class ItemDetailDialog(QDialog):
         }
 
         return data
+    
+    def remove_item(self, item):
+        """
+        Removes the currently selected item
+        """
+        date = self.window.date.selectedDate().toPyDate()
+        time = datetime.strptime(item["time"], "%H:%M:%S").time()
+
+        self.window.data.remove_item(item["name"], datetime(date.year, date.month, date.day, time.hour, time.minute, time.second))
+        self.window.update_info_text(date, self.window.data.search_date(date))
+        self.close()
 
 class NewItemDialog(QDialog):
     def __init__(self, parent):
