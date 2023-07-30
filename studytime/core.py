@@ -45,7 +45,7 @@ class SaveInstance:
         """
 
         year, month, day = item_time.year, item_time.month, item_time.day
-        data = self.get_date(year, month, day)
+        data = self.get_date(year, month, str(day).rjust(2, '0'))
 
         for item in data:
             if item["name"] == item_name and item["time"] == str(item_time.time()): # Should be specific enough to prevent double-ups
@@ -267,8 +267,13 @@ class Task:
 
         return data
 
-    def edit(self):
-        pass
+    def edit(self, data: dict):
+        self.name = data["name"]
+        
+        date_time = data["date"]
+        self.date = f"{date_time.year}-{date_time.month}-{str(date_time.day).rjust(2, '0')}"
+        self.time = date_time.time().strftime("%H:%M:%S")
+        self.subject = data["subject"]
 
     def mark_completed(self, complete: bool):
         self.completed = complete

@@ -185,6 +185,7 @@ class ItemDetailDialog(QDialog):
         super().__init__(parent)
 
         self.window = parent
+        self.item = item
         self.setWindowTitle(f"{item['type']} Info")
 
         layout = QGridLayout(self)
@@ -233,7 +234,8 @@ class ItemDetailDialog(QDialog):
 
         set_notification = QCheckBox("Toggle Notification", self)
         edit_toggle = QPushButton("Edit", self, clicked=self.toggle_editing)
-        remove_btn = QPushButton("DELETE", self, clicked=lambda : self.remove_item(item))
+        submit_btn = QPushButton("Submit", self, clicked=self.submit)
+        remove_btn = QPushButton("Delete", self, clicked=lambda : self.remove_item(item))
 
         # Subgrid for Column 1
         datetime_layout.addWidget(time_label, 0, 0)
@@ -299,7 +301,7 @@ class ItemDetailDialog(QDialog):
 
         return data
     
-    def remove_item(self, item):
+    def remove_item(self, item, date=None):
         """
         Removes the currently selected item
         """
@@ -309,6 +311,34 @@ class ItemDetailDialog(QDialog):
         self.window.data.remove_item(item["name"], datetime(date.year, date.month, date.day, time.hour, time.minute, time.second))
         self.window.update_info_text(date, self.window.data.search_date(date))
         self.close()
+    
+    def submit(self):
+        """
+        Removes the currently selected item and replaces it with a new one as defined in the dialog inputs
+        """
+        item_data = self.get_inputs()
+        self.remove_item(self.item)
+
+        if item_data["name"] == "":
+            self.error_message.setText("Please input a name and try again.")
+        else:
+            date = item_data["date"].toPyDate()
+            time = item_data["time"].toPyTime()
+
+            item_datetime = datetime(date.year, date.month, date.day, time.hour, time.minute, 0)
+
+            func = [
+                partial(self.window.data.add_task, subject = item_data["subject"]), # Subject is a necessary argument for this function, but it's not needed for all versions so it's passed here
+                partial(self.window.data.add_event),
+                partial(self.window.data.add_assignment, subject = item_data["subject"]) # See above
+            ]
+
+            func[item_data["type"]](item_data["name"], item_datetime) # Selects the relevant add function from studytime.core, and passes arguments
+
+            self.window.date.setSelectedDate(item_data["date"])
+            self.window.update_info_text(item_datetime, self.window.data.search_date(item_datetime))
+            self.close()
+
 
 class NewItemDialog(QDialog):
     def __init__(self, parent):
