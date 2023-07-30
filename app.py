@@ -233,6 +233,7 @@ class ItemDetailDialog(QDialog):
 
         set_notification = QCheckBox("Toggle Notification", self)
         edit_toggle = QPushButton("Edit", self, clicked=self.toggle_editing)
+        remove_btn = QPushButton("DELETE", self, clicked=lambda : self.remove_item(item))
 
         # Subgrid for Column 1
         datetime_layout.addWidget(time_label, 0, 0)
@@ -254,6 +255,7 @@ class ItemDetailDialog(QDialog):
         layout.addWidget(set_notification, 2, 2)
 
         layout.addWidget(edit_toggle, 3, 1)
+        layout.addWidget(remove_btn, 3, 2)
 
         self.setLayout(layout)
 
@@ -296,6 +298,17 @@ class ItemDetailDialog(QDialog):
         }
 
         return data
+    
+    def remove_item(self, item):
+        """
+        Removes the currently selected item
+        """
+        date = self.window.date.selectedDate().toPyDate()
+        time = datetime.strptime(item["time"], "%H:%M:%S").time()
+
+        self.window.data.remove_item(item["name"], datetime(date.year, date.month, date.day, time.hour, time.minute, time.second))
+        self.window.update_info_text(date, self.window.data.search_date(date))
+        self.close()
 
 class NewItemDialog(QDialog):
     def __init__(self, parent):

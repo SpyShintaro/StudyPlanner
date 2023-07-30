@@ -12,10 +12,7 @@ else:
     from studytime.time_class import *
 
 from datetime import datetime
-import calendar
-import json
-import re
-import difflib
+import calendar, json, re, difflib
 
 class SaveInstance:
     """
@@ -148,10 +145,10 @@ class SaveInstance:
                     "months": self.generate_new_year(year)
                     }
 
-        with open(file_path, "r") as f: # Loading JSON file into Python Object
+        """with open(file_path, "r") as f: # Loading JSON file into Python Object
             data = json.load(f)
         
-        """        for years in data:
+                for years in data:
             if years.keys()[0] == year:
                 break
             else:
@@ -264,11 +261,14 @@ class Task:
             "name": f"{self.name}",
             "subject": f"{self.subject}",
             "time": f"{self.time}",
-            "completed": False,
+            "completed": f"{self.completed}",
             "type": "Task"
         }
 
         return data
+
+    def edit(self):
+        pass
 
     def mark_completed(self, complete: bool):
         self.completed = complete

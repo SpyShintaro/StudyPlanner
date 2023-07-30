@@ -1,7 +1,3 @@
 notebook.ipynb
-<<<<<<< Updated upstream
-studytime/app_data/
-=======
-*.pyc
->>>>>>> Stashed changes
-.venv/
+.venv
+studytime/__pycache__
