@@ -233,9 +233,11 @@ class ItemDetailDialog(QDialog):
         self.subject_input.setEnabled(False)
 
         set_notification = QCheckBox("Toggle Notification", self)
+
         edit_toggle = QPushButton("Edit", self, clicked=self.toggle_editing)
         submit_btn = QPushButton("Submit", self, clicked=self.submit)
         remove_btn = QPushButton("Delete", self, clicked=lambda : self.remove_item(item))
+        notification_btn = QPushButton("Set Notification", self, clicked=self.create_notification)
 
         # Subgrid for Column 1
         datetime_layout.addWidget(time_label, 0, 0)
@@ -247,6 +249,7 @@ class ItemDetailDialog(QDialog):
         layout.addWidget(name_label, 0, 0)
         layout.addWidget(self.name_text, 1, 0)
         layout.addLayout(datetime_layout, 2, 0)
+        layout.addWidget(submit_btn, 3, 0)
 
         # Column 2
         layout.addWidget(subject_label, 0, 1)
@@ -338,6 +341,22 @@ class ItemDetailDialog(QDialog):
             self.window.date.setSelectedDate(item_data["date"])
             self.window.update_info_text(item_datetime, self.window.data.search_date(item_datetime))
             self.close()
+    
+    def create_notification(self):
+        """
+        Brings up a dialog to set notification time
+        """
+        data = self.get_inputs()
+        
+        date = data["date"]
+        time = data["time"]
+
+        print(date)
+        print(time)
+
+        date_time = datetime(date.year(), date.month(), date.day(), time.hour(), time.minute(), 0)
+
+        self.window.data.set_notification(self.item, date_time)
 
 
 class NewItemDialog(QDialog):
