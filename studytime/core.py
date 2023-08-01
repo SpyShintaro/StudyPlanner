@@ -272,12 +272,25 @@ class SaveInstance:
         TASK_CREATE_OR_UPDATE = 6
         TASK_LOGON_NONE = 0
         root_folder.RegisterTaskDefinition(
-            item["name"],  # Task name
+            f'{item["name"]} {time.strftime("%m-%d-%Y %H:%M:%S")}',  # Task name
             task_def,
             TASK_CREATE_OR_UPDATE,
             '',  # No user
             '',  # No password
             TASK_LOGON_NONE)
+    
+    def remove_notification(self, item: dict, time: datetime):
+        """
+        Removes the notification
+        """
+        scheduler = win32com.client.Dispatch("Schedule.Service")
+        scheduler.Connect()
+        root_folder = scheduler.GetFolder("\\")
+        
+        root_folder.DeleteTask()
+
+        item_id = f"{item['time']} {time.strftime('%m-%d-%Y %H:%M:%S')}"
+        root_folder.DeleteTask(item_id, 0)
 
 
 class Task:
