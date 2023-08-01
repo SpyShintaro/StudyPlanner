@@ -239,7 +239,7 @@ class SaveInstance:
         for year in data: # Accessing year array
             self.years.append(Year(year))
     
-    def set_notification(self, item: dict, time: datetime):
+    def set_notification(self, item: dict, time: datetime, descr: str):
         """
         Sets a Windows Toast Notification for the item
         """
@@ -250,7 +250,7 @@ class SaveInstance:
 
         # Create trigger
         start_time = time
-        TASK_TRIGGER_TIME = 1
+        TASK_TRIGGER_TIME = 0
         trigger = task_def.Triggers.Create(TASK_TRIGGER_TIME)
         trigger.StartBoundary = start_time.isoformat()
 
@@ -260,10 +260,10 @@ class SaveInstance:
         action.ID = 'ExecAction'
         action.Path = r'C:\Users\jakei\StudyPlanner\.venv\Scripts\python.exe' # TODO replace these hardcoded file paths
         action.WorkingDirectory = r'C:\Users\jakei\StudyPlanner'
-        action.Arguments = f'create_notif.py "{item["name"]}" "{item["type"]}"'
+        action.Arguments = f'create_notif.py "{item["name"]}" "{descr}"'
 
         # Set parameters
-        task_def.RegistrationInfo.Description = item["type"]
+        task_def.RegistrationInfo.Description = descr
         task_def.Settings.Enabled = True
         task_def.Settings.StopIfGoingOnBatteries = False
 
