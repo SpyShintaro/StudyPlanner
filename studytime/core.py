@@ -12,7 +12,7 @@ else:
     from studytime.time_class import *
 
 from datetime import datetime
-import calendar, json, re, difflib
+import calendar, json, re, difflib, win32com, win32com.client, os
 
 class SaveInstance:
     """
@@ -238,6 +238,63 @@ class SaveInstance:
         self.years = []
         for year in data: # Accessing year array
             self.years.append(Year(year))
+    
+    def set_notification(self, item: dict, time: datetime, descr: str):
+        """
+        Sets a Windows Toast Notification for the item
+        """
+        scheduler = win32com.client.Dispatch('Schedule.Service')
+        scheduler.Connect()
+        root_folder = scheduler.GetFolder('\\')
+        task_def = scheduler.NewTask(0)
+
+        # Create trigger
+        start_time = time
+        TASK_TRIGGER_TIME = 1
+        trigger = task_def.Triggers.Create(TASK_TRIGGER_TIME)
+        trigger.StartBoundary = start_time.isoformat()
+
+        # Create action
+        TASK_ACTION_EXEC = 0
+        action = task_def.Actions.Create(TASK_ACTION_EXEC)
+        action.ID = 'ExecAction'
+        action.Path = r'C:\Users\jakei\StudyPlanner\.venv\Scripts\python.exe' # TODO replace these hardcoded file paths
+        action.WorkingDirectory = r'C:\Users\jakei\StudyPlanner'
+        action.Arguments = f'create_notif.py "{item["name"]}" "{descr}"'
+
+        # Set parameters
+        task_def.RegistrationInfo.Description = descr
+        task_def.Settings.Enabled = True
+        task_def.Settings.StopIfGoingOnBatteries = False
+
+        # Register task
+        # If task already exists, it will be updated
+        TASK_CREATE_OR_UPDATE = 6
+        TASK_LOGON_NONE = 0
+
+        name = f'{item["name"]} {time.strftime("%m_%d_%Y %H_%M_%S")}'.replace(':', '_')
+        
+        root_folder.RegisterTaskDefinition(
+            name,  # Task name
+            task_def,
+            TASK_CREATE_OR_UPDATE,
+            '',  # No user
+            '',  # No password
+            TASK_LOGON_NONE)
+
+    def remove_notification(self, item: dict, time: datetime):
+        """
+        Removes the notification
+        """
+        scheduler = win32com.client.Dispatch("Schedule.Service")
+        scheduler.Connect()
+        root_folder = scheduler.GetFolder("\\")
+        
+        root_folder.DeleteTask()
+
+        item_id = f"{item['time']} {time.strftime('%m-%d-%Y %H:%M:%S')}"
+        root_folder.DeleteTask(item_id, 0)
+
 
 class Task:
     """

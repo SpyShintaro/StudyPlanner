@@ -227,15 +227,15 @@ class ItemDetailDialog(QDialog):
 
         try:
             self.subject_input.setCurrentText(item["subject"])
-        except KeyError:
+        except KeyError: # KeyError thrown if the item is an event
             self.subject_input.setCurrentText("None")
         
         self.subject_input.setEnabled(False)
 
-        set_notification = QCheckBox("Toggle Notification", self)
         edit_toggle = QPushButton("Edit", self, clicked=self.toggle_editing)
         submit_btn = QPushButton("Submit", self, clicked=self.submit)
         remove_btn = QPushButton("Delete", self, clicked=lambda : self.remove_item(item))
+        notification_btn = QPushButton("Notification Details", self, clicked=self.open_notification_dialog)
 
         # Subgrid for Column 1
         datetime_layout.addWidget(time_label, 0, 0)
@@ -247,6 +247,7 @@ class ItemDetailDialog(QDialog):
         layout.addWidget(name_label, 0, 0)
         layout.addWidget(self.name_text, 1, 0)
         layout.addLayout(datetime_layout, 2, 0)
+        layout.addWidget(submit_btn, 3, 0)
 
         # Column 2
         layout.addWidget(subject_label, 0, 1)
@@ -254,7 +255,7 @@ class ItemDetailDialog(QDialog):
 
         layout.addWidget(self.subject_input, 1, 1)
         layout.addWidget(self.type, 2, 1)
-        layout.addWidget(set_notification, 2, 2)
+        layout.addWidget(notification_btn, 2, 2)
 
         layout.addWidget(edit_toggle, 3, 1)
         layout.addWidget(remove_btn, 3, 2)
@@ -264,6 +265,9 @@ class ItemDetailDialog(QDialog):
         self.show()
     
     def toggle_editing(self):
+        """
+        Flips the read-only flag for all of the input boxes
+        """
         self.name_text.setReadOnly(not self.name_text.isReadOnly())
         self.date_input.setReadOnly(not self.date_input.isReadOnly())
         self.time_text.setReadOnly(not self.time_text.isReadOnly())
@@ -338,7 +342,72 @@ class ItemDetailDialog(QDialog):
             self.window.date.setSelectedDate(item_data["date"])
             self.window.update_info_text(item_datetime, self.window.data.search_date(item_datetime))
             self.close()
+    
+    def open_notification_dialog(self):
+        dialog = NotificationDialog(self, self.get_inputs())
+    
+"""    def create_notification(self):
+        data = self.get_inputs()
+        
+        date = data["date"]
+        time = data["time"]
 
+        print(date)
+        print(time)
+
+        date_time = datetime(date.year(), date.month(), date.day(), time.hour(), time.minute(), 0)
+
+        self.window.data.set_notification(self.item, date_time)"""
+
+class NotificationDialog(QDialog):
+    def __init__(self, parent: ItemDetailDialog, item: dict):
+        super().__init__(parent)
+        self.window = parent.window
+
+        self.setWindowTitle("New Notification")
+        layout = QGridLayout(self)
+
+        # Row 1
+        self.time_label = QLabel("Time: ", self)
+        self.time_input = QTimeEdit(item["time"], self)
+
+        # Row 2
+        self.date_label = QLabel("Date: ", self)
+        self.date_input = QDateEdit(item["date"], self)
+
+        # Row 3/4
+        self.description_label = QLabel("Notification Message:")
+        self.description_input = QTextEdit(self)
+
+        # Row 5
+        self.submit_btn = QPushButton("Create Notification", self, clicked=lambda: self.submit(item))
+
+        layout.addWidget(self.time_label, 0, 0)
+        layout.addWidget(self.time_input, 0, 1)
+
+        layout.addWidget(self.date_label, 1, 0)
+        layout.addWidget(self.date_input, 1, 1)
+
+        layout.addWidget(self.description_label, 2, 0, 1, 2)
+        layout.addWidget(self.description_input, 3, 0, 1, 2)
+
+        layout.addWidget(self.submit_btn, 4, 0, 1, 2)
+
+        self.setLayout(layout)
+        self.show()
+    
+    def submit(self, item):
+        """
+        Creates a notification in task scheduler whenever the submit button is pressed
+        """
+
+        date = self.date_input.date()
+        time = self.time_input.time()
+
+        date_time = datetime(date.year(), date.month(), date.day(), time.hour(), time.minute(), 0)
+
+        self.window.data.set_notification(item, date_time, self.description_input.toPlainText())
+        self.close()
 
 class NewItemDialog(QDialog):
     def __init__(self, parent):
@@ -401,7 +470,7 @@ class NewItemDialog(QDialog):
         layout.addWidget(self.type_input, 2, 1)
 
         # Date Input
-        layout.addWidget(date_text, 3, 0)
+        layout.addWidget(date_text, 3, 0) 
         layout.addWidget(self.date_input, 3, 1)
 
         # Time Input
