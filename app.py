@@ -7,9 +7,9 @@ Description: User-Friendly GUI to interact with StudyTime functionality
 """
 
 # GUI Handling
-from PyQt6.QtWidgets import (QMainWindow, QApplication, QWidget, QLabel, QPushButton, QHBoxLayout, QVBoxLayout,
+from PyQt6.QtWidgets import (QMainWindow, QApplication, QWidget, QLabel, QPushButton, QVBoxLayout,
                              QGridLayout, QLineEdit, QCalendarWidget, QTextEdit, QDialog, QDateEdit, QTimeEdit,
-                             QComboBox, QGroupBox, QScrollArea, QTableWidget, QTableWidgetItem, QCheckBox, QCompleter)
+                             QComboBox, QGroupBox, QScrollArea, QTableWidget, QTableWidgetItem, QCompleter)
 from PyQt6.QtCore import Qt, QDate, QTime, QStringListModel
 from PyQt6.QtGui import QFont
 

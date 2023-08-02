@@ -12,7 +12,7 @@ else:
     from studytime.time_class import *
 
 from datetime import datetime
-import calendar, json, re, difflib, win32com, win32com.client, os
+import calendar, json, re, difflib, win32com, win32com.client
 
 class SaveInstance:
     """
