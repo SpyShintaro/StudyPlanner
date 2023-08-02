@@ -193,17 +193,20 @@ class SaveInstance:
         """
         Searches through item list for results with specified name
         """
-        query = re.compile(fr"{name.lower()}+")
-        results = []
+        try:
+            query = re.compile(fr"{name.lower()}+")
+            results = []
 
-        for date in self.items:
-            items = date["data"]
-            for item in items:
-                if query.findall(item["name"].lower()):
-                    item["date"] = date["date"]
-                    results.append(item)
-        
-        return sorted(results, key=lambda x: difflib.SequenceMatcher(None, x["name"], name).ratio(), reverse=True)
+            for date in self.items:
+                items = date["data"]
+                for item in items:
+                    if query.findall(item["name"].lower()):
+                        item["date"] = date["date"]
+                        results.append(item)
+            
+            return sorted(results, key=lambda x: difflib.SequenceMatcher(None, x["name"], name).ratio(), reverse=True)
+        except re.error:
+            return
 
     def search_date(self, date_time: datetime):
         """

@@ -139,11 +139,15 @@ class MainWindow(QMainWindow):
         """
         Takes the user to whatever item corresponds to the current search query. If no matches exist, nothing happens
         """
-        item = self.data.search_name(self.search_bar.text())[0]
-        date = datetime.strptime(item["date"], "%m/%d/%Y")
+        try:
+            item = self.data.search_name(self.search_bar.text())[0]
+            date = datetime.strptime(item["date"], "%m/%d/%Y")
 
-        self.date.setSelectedDate(QDate.fromString(item["date"], "MM/dd/yyyy"))
-        self.update_info_text(date, self.data.search_date(date))
+            self.date.setSelectedDate(QDate.fromString(item["date"], "MM/dd/yyyy"))
+            self.update_info_text(date, self.data.search_date(date))
+        except TypeError as error:
+            print(error)
+            return
 
 class InfoWrapper(QScrollArea):
     def __init__(self, parent):
