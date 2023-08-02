@@ -250,7 +250,7 @@ class SaveInstance:
 
         # Create trigger
         start_time = time
-        TASK_TRIGGER_TIME = 0
+        TASK_TRIGGER_TIME = 1
         trigger = task_def.Triggers.Create(TASK_TRIGGER_TIME)
         trigger.StartBoundary = start_time.isoformat()
 
@@ -271,14 +271,17 @@ class SaveInstance:
         # If task already exists, it will be updated
         TASK_CREATE_OR_UPDATE = 6
         TASK_LOGON_NONE = 0
+
+        name = f'{item["name"]} {time.strftime("%m_%d_%Y %H_%M_%S")}'.replace(':', '_')
+        
         root_folder.RegisterTaskDefinition(
-            f'{item["name"]} {time.strftime("%m-%d-%Y %H:%M:%S")}',  # Task name
+            name,  # Task name
             task_def,
             TASK_CREATE_OR_UPDATE,
             '',  # No user
             '',  # No password
             TASK_LOGON_NONE)
-    
+
     def remove_notification(self, item: dict, time: datetime):
         """
         Removes the notification

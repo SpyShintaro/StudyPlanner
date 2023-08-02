@@ -470,7 +470,7 @@ class NewItemDialog(QDialog):
         layout.addWidget(self.type_input, 2, 1)
 
         # Date Input
-        layout.addWidget(date_text, 3, 0)
+        layout.addWidget(date_text, 3, 0) 
         layout.addWidget(self.date_input, 3, 1)
 
         # Time Input

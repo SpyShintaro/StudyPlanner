@@ -8,7 +8,6 @@ Description: A program to be run by task scheduler to make a notification on Win
 
 from win10toast import ToastNotifier
 import sys
-import warnings
 
 def show_notif(args):
     toast = ToastNotifier()
@@ -23,5 +22,4 @@ def show_notif(args):
     sys.exit()
 
 if __name__ == "__main__":
-    warnings.filterwarnings("ignore")
     show_notif(sys.argv)
