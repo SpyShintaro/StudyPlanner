@@ -24,6 +24,7 @@ class SaveInstance:
         """
         self.file_name = file_name
         self.data = self.load_file()
+        self.subjects = self.load_subjects()
 
         self.items = self.scan_items()
 
@@ -295,6 +296,18 @@ class SaveInstance:
         item_id = f"{item['time']} {time.strftime('%m-%d-%Y %H:%M:%S')}"
         root_folder.DeleteTask(item_id, 0)
 
+class Subject:
+    def __init__(self) -> list:
+        file_path = f"studytime/app_data/subjects.json"
+
+        try:
+            with open(file_path, "r") as f:
+                self.subjects = json.load(f)
+        except FileNotFoundError:
+            self.subjects = []
+    
+    def add_subject(self, subject_name):
+        self.subjects.append(subject_name)
 
 class Task:
     """

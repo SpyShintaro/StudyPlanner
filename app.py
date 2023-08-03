@@ -180,8 +180,15 @@ class InfoWrapper(QScrollArea):
         
         self.table.resizeColumnsToContents()
 
+class SubjectDialog(QDialog):
+    def __init__(self, parent: QDialog):
+        super(parent).__init__()
+
+        self.window = parent.window
+        scroll = QScrollArea(self)
+
 class ItemDetailDialog(QDialog):
-    def __init__(self, parent, item):
+    def __init__(self, parent: QDialog, item: dict):
         super().__init__(parent)
 
         self.window = parent
