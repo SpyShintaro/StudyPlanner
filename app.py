@@ -9,9 +9,9 @@ Description: User-Friendly GUI to interact with StudyTime functionality
 # GUI Handling
 from PyQt6.QtWidgets import (QMainWindow, QApplication, QWidget, QLabel, QPushButton, QHBoxLayout, QVBoxLayout,
                              QGridLayout, QLineEdit, QCalendarWidget, QTextEdit, QDialog, QDateEdit, QTimeEdit,
-                             QComboBox, QGroupBox, QScrollArea, QTableWidget, QTableWidgetItem, QCheckBox, QCompleter)
+                             QComboBox, QGroupBox, QScrollArea, QTableWidget, QTableWidgetItem, QCheckBox, QCompleter, QMessageBox)
 from PyQt6.QtCore import Qt, QDate, QTime, QStringListModel
-from PyQt6.QtGui import QFont
+from PyQt6.QtGui import QFont, QIcon
 
 import sys
 from functools import partial
@@ -321,11 +321,15 @@ class ItemDetailDialog(QDialog):
         Removes the currently selected item and replaces it with a new one as defined in the dialog inputs
         """
         item_data = self.get_inputs()
-        self.remove_item(self.item)
 
         if item_data["name"] == "":
-            self.error_message.setText("Please input a name and try again.")
+            dialog = QMessageBox(QMessageBox.Icon.Critical, "Error","Please fill in the name field and try again", parent=self)
+            dialog.show()
+        elif item_data["type"] != 1 and item_data["subject"] == "None":
+            dialog = QMessageBox(QMessageBox.Icon.Critical, "Error","Please select a subject and try again.", parent=self)
+            dialog.show()
         else:
+            self.remove_item(item_data)
             date = item_data["date"].toPyDate()
             time = item_data["time"].toPyTime()
 
@@ -528,6 +532,8 @@ class NewItemDialog(QDialog):
 
         if item_data["name"] == "":
             self.error_message.setText("Please input a name and try again.")
+        elif item_data["type"] != 1 and item_data["subject"] == "None":
+            self.error_message.setText("Please select a subject and try again.")
         else:
             date = item_data["date"].toPyDate()
             time = item_data["time"].toPyTime()

@@ -10,12 +10,20 @@ from win10toast import ToastNotifier
 import sys
 
 def show_notif(args):
+    """
+    Automatic function to be called by the task scheduler task
+    """
     toast = ToastNotifier()
+
+    if args[2] == "":
+        descr = "No description given"
+    else:
+        descr = args[2]
 
     toast.show_toast(
         args[1],
-        args[2],
-        duration = 1,
+        descr,
+        duration = 10,
         threaded = True
     )
 

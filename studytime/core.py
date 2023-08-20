@@ -12,6 +12,8 @@ else:
     from studytime.time_class import *
 
 from datetime import datetime
+from pathlib import Path
+
 import calendar, json, re, difflib, win32com, win32com.client, os
 
 class SaveInstance:
@@ -258,8 +260,11 @@ class SaveInstance:
         TASK_ACTION_EXEC = 0
         action = task_def.Actions.Create(TASK_ACTION_EXEC)
         action.ID = 'ExecAction'
-        action.Path = r'C:\Users\jakei\StudyPlanner\.venv\Scripts\python.exe' # TODO replace these hardcoded file paths
-        action.WorkingDirectory = r'C:\Users\jakei\StudyPlanner'
+        # action.Path = r'C:\Users\Jake Hickey\Documents\Schoolwork\Applied Computing Folio\StudyPlanner\.venv\Scripts\python.exe'
+        # action.WorkingDirectory = r'C:\Users\Jake Hickey\Documents\Schoolwork\Applied Computing Folio\StudyPlanner'
+        action.Path = f'{str(Path.cwd())}\.venv\Scripts\python.exe'
+        action.WorkingDirectory = f'{str(Path.cwd())}'
+        
         action.Arguments = f'create_notif.py "{item["name"]}" "{descr}"'
 
         # Set parameters
